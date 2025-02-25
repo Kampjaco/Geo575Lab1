@@ -1,0 +1,47 @@
+/*Add CSS styles here*/
+#map {    
+    height: 900px;    
+    width: 100%;
+    display: inline-block;
+}
+
+
+
+#forward {  
+    float: right;
+    height: 100%  
+}  
+
+#reverse {  
+    float: left;
+    height: 100%  
+}
+
+.sequence-control-container {  
+    width: 350px;  
+    height: 30px;  
+    background-color: rgba(255,255,255,0.8);  
+    padding: 10px;  
+    line-height: 45px;  
+    text-align: center;  
+    border: solid gray 1px;  
+}
+
+.legend-control-container {  
+    width: 350px;  
+    height: 30px;  
+    background-color: rgba(255,255,255,0.8);  
+    padding: 10px;  
+    line-height: 45px;  
+    text-align: center;  
+    border: solid gray 1px;  
+}  
+
+.range-slider {  
+    width: 250px;  
+}  
+
+.step {  
+    width: 40px;  
+}  
+

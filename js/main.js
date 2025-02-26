@@ -3,6 +3,7 @@
 //Global variables
 var map;
 var index = 0;
+var dataStats = {};
 
 
 //Create the map
@@ -18,8 +19,47 @@ function createMap() {
     getData(map)
 }
 
+//Step 2: Import GeoJSON data
+function getData(map){
+    //load the data
+    fetch('data/MN_County_Pop.geojson')
+        .then(function(response){
+            return response.json();
+        })
+        .then(function(json){
+            //Create an attributes array
+            var attributes = processData(json);
+            //Calculate min, max, mean values
+            calcStats(json);
+            //call function to create proportional symbols
+            createPropSymbols(json, attributes);
+            //Function for sequence control
+            createSequenceControls(attributes);
+            //Create the legend
+            createLegend(attributes);
+        })
+}
+
+//Build array of attributes from the GeoJson
+function processData(data) {
+    var attributes = [];
+
+    //Properties of first feature in dataset
+    var properties = data.features[0].properties;
+
+    //Push each attribute name into attributes array
+    for(var attribute in properties) {
+        //Only take attributes with population values
+        if(attribute.indexOf("Pop") > -1) {
+            attributes.push(attribute);
+        }
+    }
+
+    return attributes;
+}
+
 //Calculate minimum values for proportional circles
-function calculatedMinValue(data) {
+function calcStats(data) {
     //Create an empty array to store all data values
    var allValues = [];
 
@@ -34,35 +74,26 @@ function calculatedMinValue(data) {
         allValues.push(value);
     }
    }
-   //Get minimum value in array
-   var minValue = Math.min(...allValues);
-
-   return minValue;
+   //Get min, max, mean stats for array
+   dataStats.min = Math.min(...allValues);
+   dataStats.max = Math.max(...allValues);
+   //Calculate mean value
+   var sum = allValues.reduce(function(a, b){return a+b;});
+   dataStats.mean = sum / allValues.length;
 }
 
-//Calculate radius of each proportional symbol
-function calcPropRadius(attValue) {
-    //Constant factor adjusts symbol sizes evenly
-    var minRadius = 3;
 
-    //Flannery Appearance Compensation formula
-    var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius;
-
-    return radius;
-}
-
-//Consolidated popup content creation function
-function createPopupContent(properties, attribute) {
-    //Popup content
-    var popupContent = "<p><b>County:</b> " + properties.CTY_NAME + "</p>";
-            
-    //add formatted attribute to panel content string
-    var year = attribute.split(" ")[0];
-    popupContent += "<p><b>Population in " + year + ":</b> " + properties[attribute]+ "</p>";
-
-    return popupContent;
+// Function to create symbols
+function createPropSymbols(data, attributes){
     
+    // Add the GeoJSON layer
+    L.geoJson(data, {
+        pointToLayer: function(feature, latlng) {
+            return pointToLayer(feature, latlng, attributes);
+        }
+    }).addTo(map);
 }
+
 
 function pointToLayer(feature, latlng, attributes){
 
@@ -96,16 +127,32 @@ function pointToLayer(feature, latlng, attributes){
     return layer; // 
 }
 
-// Function to create symbols
-function createPropSymbols(data, map, attributes){
-    
-    // Add the GeoJSON layer
-    L.geoJson(data, {
-        pointToLayer: function(feature, latlng) {
-            return pointToLayer(feature, latlng, attributes);
-        }
-    }).addTo(map);
+
+//Calculate radius of each proportional symbol
+function calcPropRadius(attValue) {
+    //Constant factor adjusts symbol sizes evenly
+    var minRadius = 3;
+
+    //Flannery Appearance Compensation formula
+    var radius = 1.0083 * Math.pow(attValue/dataStats.min,0.4715) * minRadius;
+
+    return radius;
 }
+
+
+//Consolidated popup content creation function
+function createPopupContent(properties, attribute) {
+    //Popup content
+    var popupContent = "<p><b>County:</b> " + properties.CTY_NAME + "</p>";
+            
+    //add formatted attribute to panel content string
+    var year = attribute.split(" ")[0];
+    popupContent += "<p><b>Population in " + year + ":</b> " + properties[attribute]+ "</p>";
+
+    return popupContent;
+    
+}
+
 
 //Create new sequence controls
 function createSequenceControls(attributes) {
@@ -165,8 +212,6 @@ function createSequenceControls(attributes) {
             //Step 8: update slider
             document.querySelector('.range-slider').value = index;
 
-            console.log(attributes[index])
-
             //Step 9: pass new attribute to update symbols
             updatePropSymbols(attributes[index]);
         })
@@ -183,6 +228,7 @@ function createSequenceControls(attributes) {
     });
 }
 
+
 //Add legend
 function createLegend(attributes) {
     var LegendControl = L.Control.extend({
@@ -192,22 +238,46 @@ function createLegend(attributes) {
 
         onAdd: function() {
             //Create container to hold legend
-            var container = L.DomUtil.create('div', 'legend-control-container');
+            var legendContainer = L.DomUtil.create('div', 'legend-control-container');
 
-            //Gets the year from the current index based on slider
-            var year = attributes[index].split(" ")[0]; 
+            legendContainer.innerHTML = `<h2 class="temporalLegend"> Population in <span class="year">2010</span></h2>`
 
-            container.innerHTML = `<p class="temporalLegend"> Population in ${year}</p>`
+            //Start attribute legend with SVG string
+            var svg = '<svg id="attribute-legend" width="130px" height="130px">';
 
-            console.log(index)
+            //Array of cirlce names to base loop on
+            var circles = ["max", "mean", "min"];
 
+            //Loop to add each circle and text to svg string
+            for(var i=0; i < circles.length; i++) {
 
-            return container
+                //Assign r and cy attributes
+                var radius = calcPropRadius(dataStats[circles[i]]);
+                var cy = 130 - radius;
+
+                //Circle string
+                svg += `<circle class="legend-circle" id="' + circles[i] + '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="65" cy="${cy}" r="${radius}"/>`;
+
+                //Evenly space out labels
+                var textY = i * 20 + 20
+
+                //text string
+                svg += '<text id="' + circles[i] + '-text" x="65" y="' + textY + '">' + Math.round(dataStats[circles[i]]*100)/100  + '</text>';
+            };
+
+            //Close SVG string
+            svg += "</svg>";
+
+            //Add attribute legend svg to container
+            legendContainer.insertAdjacentHTML('beforeend',svg);
+
+            return legendContainer
         }
     });
 
     map.addControl(new LegendControl());
 };
+
 
 //Resize proportional symbols according to new attribute values
 function updatePropSymbols(attribute){
@@ -226,48 +296,28 @@ function updatePropSymbols(attribute){
             //update popup content            
             popup = layer.getPopup();            
             popup.setContent(popupContent).update();
+
+
         };
     });
+
+    //Function to update legend
+    updateLegend(attribute);
 };
 
-//Build array of attributes from the GeoJson
-function processData(data) {
-    var attributes = [];
 
-    //Properties of first feature in dataset
-    var properties = data.features[0].properties;
+//Updates text and proportional circle sizes in the legend
+function updateLegend(attribute) {
 
-    //Push each attribute name into attributes array
-    for(var attribute in properties) {
-        //Only take attributes with population values
-        if(attribute.indexOf("Pop") > -1) {
-            attributes.push(attribute);
-        }
+    //Get current year
+    var year = attribute.split(" ")[0]; 
+
+    //Find span class 'year' and update legend text
+    var yearSpan = document.querySelector(".legend-control-container .year");
+    if(yearSpan) {
+        yearSpan.textContent = year;
     }
-
-    return attributes;
 }
-
-//Step 2: Import GeoJSON data
-function getData(map){
-    //load the data
-    fetch('data/MN_County_Pop.geojson')
-        .then(function(response){
-            return response.json();
-        })
-        .then(function(json){
-            //Create an attributes array
-            var attributes = processData(json);
-            //Calculate minimum data value
-            minValue = calculatedMinValue(json);
-            //call function to create proportional symbols
-            createPropSymbols(json, map, attributes);
-            //Function for sequence control
-            createSequenceControls(attributes);
-            //Create the legend
-            createLegend(attributes);
-        })
-};
 
 document.addEventListener('DOMContentLoaded',createMap);
 

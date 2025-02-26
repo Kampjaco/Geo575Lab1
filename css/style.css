@@ -28,14 +28,22 @@
 }
 
 .legend-control-container {  
-    width: 350px;  
-    height: 30px;  
-    background-color: rgba(255,255,255,0.8);  
+    width: 225px;  
+    height: auto;  
+    background-color: rgba(255, 255, 255, 0.8);  
     padding: 10px;  
-    line-height: 45px;  
     text-align: center;  
     border: solid gray 1px;  
-}  
+    display: flex;  
+    flex-direction: column;  
+    align-items: center;  
+}
+
+.legend-control-container h2 {  
+    margin: 0 0 10px 0; 
+    font-size: 18px;  
+}
+
 
 .range-slider {  
     width: 250px;  

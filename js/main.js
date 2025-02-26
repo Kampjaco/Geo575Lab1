@@ -1,5 +1,4 @@
-// Add all scripts to the JS folder
-
+ 
 //Global variables
 var map;
 var index = 0;
@@ -134,7 +133,7 @@ function calcPropRadius(attValue) {
     var minRadius = 3;
 
     //Flannery Appearance Compensation formula
-    var radius = 1.0083 * Math.pow(attValue/dataStats.min,0.4715) * minRadius;
+    var radius = 1.0083 * Math.pow(attValue/dataStats.min,0.3715) * minRadius;
 
     return radius;
 }
@@ -243,7 +242,7 @@ function createLegend(attributes) {
             legendContainer.innerHTML = `<h2 class="temporalLegend"> Population in <span class="year">2010</span></h2>`
 
             //Start attribute legend with SVG string
-            var svg = '<svg id="attribute-legend" width="130px" height="130px">';
+            var svg = '<svg id="attribute-legend" width="160px">';
 
             //Array of cirlce names to base loop on
             var circles = ["max", "mean", "min"];
@@ -253,16 +252,16 @@ function createLegend(attributes) {
 
                 //Assign r and cy attributes
                 var radius = calcPropRadius(dataStats[circles[i]]);
-                var cy = 130 - radius;
+                var cy = 75 - radius;
 
                 //Circle string
-                svg += `<circle class="legend-circle" id="' + circles[i] + '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="65" cy="${cy}" r="${radius}"/>`;
+                svg += `<circle class="legend-circle" id="' + circles[i] + '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="60" cy="${cy}" r="${radius}"/>`;
 
                 //Evenly space out labels
-                var textY = i * 20 + 20
+                var textY = i * 20 + 30
 
                 //text string
-                svg += '<text id="' + circles[i] + '-text" x="65" y="' + textY + '">' + Math.round(dataStats[circles[i]]*100)/100  + '</text>';
+                svg += '<text id="' + circles[i] + '-text" x="105" y="' + textY + '">' + Math.round(dataStats[circles[i]]*100)/100  + '</text>';
             };
 
             //Close SVG string
@@ -277,6 +276,21 @@ function createLegend(attributes) {
 
     map.addControl(new LegendControl());
 };
+
+//Updates text and proportional circle sizes in the legend
+function updateLegend(attribute) {
+
+    //Get current year
+    var year = attribute.split(" ")[0]; 
+
+    //Find span class 'year' and update legend text
+    var yearSpan = document.querySelector(".legend-control-container .year");
+    if(yearSpan) {
+        yearSpan.textContent = year;
+    }
+
+
+}
 
 
 //Resize proportional symbols according to new attribute values
@@ -306,18 +320,7 @@ function updatePropSymbols(attribute){
 };
 
 
-//Updates text and proportional circle sizes in the legend
-function updateLegend(attribute) {
 
-    //Get current year
-    var year = attribute.split(" ")[0]; 
-
-    //Find span class 'year' and update legend text
-    var yearSpan = document.querySelector(".legend-control-container .year");
-    if(yearSpan) {
-        yearSpan.textContent = year;
-    }
-}
 
 document.addEventListener('DOMContentLoaded',createMap);
 

@@ -168,12 +168,8 @@ function createSequenceControls(attributes) {
             container.insertAdjacentHTML('beforeend', '<input class="range-slider" type="range">');
 
             //Step buttons
-            container.insertAdjacentHTML('beforeend','<button class="step" id="reverse"></button>');
-            container.insertAdjacentHTML('beforeend','<button class="step" id="forward"></button>');
-
-            //Make the buttons images now
-            container.insertAdjacentHTML('beforeend',"<img src='img/backward.png'>");
-            container.insertAdjacentHTML('beforeend',"<img src='img/forward.png'>");
+            container.insertAdjacentHTML('beforeend','<button class="step" id="reverse"><img src="img/backward.png"></button>');
+            container.insertAdjacentHTML('beforeend','<button class="step" id="forward"><img src="img/forward.png"></button>');
 
             //Disables mouse event listeners for container
             L.DomEvent.disableClickPropagation(container);
@@ -242,7 +238,7 @@ function createLegend(attributes) {
             legendContainer.innerHTML = `<h2 class="temporalLegend"> Population in <span class="year">2010</span></h2>`
 
             //Start attribute legend with SVG string
-            var svg = '<svg id="attribute-legend" width="160px">';
+            var svg = '<svg id="attribute-legend" width="220px" height-"100px>';
 
             //Array of cirlce names to base loop on
             var circles = ["max", "mean", "min"];

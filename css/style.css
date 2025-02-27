@@ -5,18 +5,6 @@
     display: inline-block;
 }
 
-
-
-#forward {  
-    float: right;
-    height: 100%  
-}  
-
-#reverse {  
-    float: left;
-    height: 100%  
-}
-
 .sequence-control-container {  
     width: 350px;  
     height: 30px;  
@@ -49,7 +37,28 @@
     width: 250px;  
 }  
 
-.step {  
-    width: 40px;  
+.step {
+    width: 40px;  /* Fixed width */
+    height: 40px; /* Fixed height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.step img {
+    width: 100%; /* Ensure image fills button */
+    height: 100%; /* Ensure image fills button */
+    object-fit: contain; /* Keeps aspect ratio */
+}
+
+#forward {  
+    float: right;
 }  
+
+#reverse {  
+    float: left;
+}
 

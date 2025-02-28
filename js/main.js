@@ -12,13 +12,19 @@ var geojsonData;
 function createMap() {
     map = L.map('map').setView([46.00318583226062, -94.60267026275974], 7);
 
-    var OpenStreetMap_Mapnik = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-	    maxZoom: 19,
-	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    // Light Mode (Default)
+    var lightBasemap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map)
+
+    L.Control.geocoder({
+        defaultMarkGeocode: true,
+        position: "topleft"
     }).addTo(map);
 
     //Get data for the map
-    getData(map)
+    getData(map);
 }
 
 //Step 2: Import GeoJSON data
@@ -63,17 +69,12 @@ function processData(data) {
 
 function calcStats(data) {
 
-    // Check if data is valid
-    if (!data || !data.features || !Array.isArray(data.features)) {
-        console.error("Invalid GeoJSON data passed to calcStats:", data);
-        return;
-    }
     var yearValues = [];
 
     // Loop through each county feature
     data.features.forEach(feature => {
         var properties = feature.properties;
-        var yearAttribute = String(yearGlobal) + " Pop"; // Ensure attribute matches your dataset
+        var yearAttribute = String(yearGlobal) + " Pop"; 
         
         if (properties[yearAttribute] && !isNaN(properties[yearAttribute])) {
             yearValues.push(properties[yearAttribute]);
@@ -87,12 +88,10 @@ function calcStats(data) {
         dataStats.mean = yearValues.reduce((a, b) => a + b, 0) / yearValues.length;
     } else {
         console.warn("No valid population data found for year:", yearGlobal);
-        dataStats.min = 1; // Prevent divide-by-zero errors
+        dataStats.min = 1;
         dataStats.max = 1;
         dataStats.mean = 1;
     }
-
-    console.log(dataStats);
 }
 
 
@@ -279,17 +278,21 @@ function createLegend(attributes) {
                 console.log(dataStats[circles[i]])
 
                 //Circle string
-                svg += `<circle class="legend-circle" id="' + circles[i] + '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="60" cy="${cy}" r="${radius}"/>`;
+                svg += `<circle class="legend-circle" id="${circles[i]}" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="60" cy="${cy}" r="${radius}"/>`;
 
                 //Evenly space out labels
                 var textY = i * 20 + 30
 
                 //text string
-                svg += '<text id="' + circles[i] + '-text" x="105" y="' + textY + '">' + Math.round(dataStats[circles[i]]*100)/100  + '</text>';
+                svg += `<text id="${circles[i]}-text" x="105" y="${textY}">${Math.round(dataStats[circles[i]]*100)/100}</text>`; 
+
             };
 
             //Close SVG string
             svg += "</svg>";
+
+            // Access all circle elements in the SVG
+            var circles = document.querySelectorAll("#attribute-legend circle");
 
             //Add attribute legend svg to container
             legendContainer.insertAdjacentHTML('beforeend',svg);
@@ -312,7 +315,7 @@ function updateLegend(attribute) {
 
     // Ensure geojsonData is available before calculating stats
     if (geojsonData) {
-        calcStats(geojsonData); // Now using the full dataset
+        calcStats(geojsonData);
     } else {
         console.warn("GeoJSON data is not available.");
         return;
@@ -330,7 +333,7 @@ function updateLegend(attribute) {
             var radius = calcPropRadius(dataStats[stat]);
             circle.setAttribute("r", radius);
             circle.setAttribute("cy", 75 - radius);
-            text.textContent = Math.round(dataStats[stat] * 100) / 100;
+            text.textContent = Math.round(dataStats[stat] * 100/ 100);
         }
     });
 }
@@ -361,9 +364,6 @@ function updatePropSymbols(attribute){
     //Function to update legend
     updateLegend(attribute);
 };
-
-
-
 
 document.addEventListener('DOMContentLoaded',createMap);
 

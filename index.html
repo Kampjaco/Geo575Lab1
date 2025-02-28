@@ -5,24 +5,20 @@
         <meta name="viewport" content="width=device-width">
             <title></title>
 
-        <!--put your external stylesheet links here-->
-        <link rel="stylesheet" href="css/style.css">
-        <link rel="stylesheet" href="lib/leaflet/leaflet.css">
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""/>
+            <link rel="stylesheet" href="css/style.css">
 
-         <!-- Make sure you put this AFTER Leaflet's CSS -->
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""></script>
-        <!--[if IE<9]>
-            <link rel="stylesheet" href="css/style.ie.css">
-        <![endif]-->
+            <!-- Leaflet CSS -->
+            <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
-         <!--you can also place internal styles here;
-             place these within <style> tags-->
-        
+            <!-- Leaflet JavaScript -->
+            <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+            <!-- Leaflet Control Geocoder CSS -->
+            <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+            <!-- Leaflet Control Geocoder JavaScript -->
+            <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
     </head>
 
     <body>
@@ -33,7 +29,6 @@
         <div id ="map"></div>
 
         <!--put your external script links here-->
-        <script type="text/javascript" src="lib/leaflet/leaflet-src.js"></script>
         <script type="text/javascript" src="js/main.js"></script>
         
     </body>

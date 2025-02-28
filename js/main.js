@@ -3,6 +3,9 @@
 var map;
 var index = 0;
 var dataStats = {};
+var yearGlobal = 2010;
+var attributes;
+var geojsonData;
 
 
 //Create the map
@@ -26,6 +29,7 @@ function getData(map){
             return response.json();
         })
         .then(function(json){
+            geojsonData = json;
             //Create an attributes array
             var attributes = processData(json);
             //Calculate min, max, mean values
@@ -57,29 +61,40 @@ function processData(data) {
     return attributes;
 }
 
-//Calculate minimum values for proportional circles
 function calcStats(data) {
-    //Create an empty array to store all data values
-   var allValues = [];
 
-   //Loop through each city
-   for(var i=0; i < data.features.length; i++) {
-    var properties = data.features[i].properties;
-    //Loop through each year
-    for(var year = 2010; year <= 2019; year ++) {
-        //Get population for current year
-        var value = properties[String(year) + " Pop" ]; 
-        //Add values to array
-        allValues.push(value);
+    // Check if data is valid
+    if (!data || !data.features || !Array.isArray(data.features)) {
+        console.error("Invalid GeoJSON data passed to calcStats:", data);
+        return;
     }
-   }
-   //Get min, max, mean stats for array
-   dataStats.min = Math.min(...allValues);
-   dataStats.max = Math.max(...allValues);
-   //Calculate mean value
-   var sum = allValues.reduce(function(a, b){return a+b;});
-   dataStats.mean = sum / allValues.length;
+    var yearValues = [];
+
+    // Loop through each county feature
+    data.features.forEach(feature => {
+        var properties = feature.properties;
+        var yearAttribute = String(yearGlobal) + " Pop"; // Ensure attribute matches your dataset
+        
+        if (properties[yearAttribute] && !isNaN(properties[yearAttribute])) {
+            yearValues.push(properties[yearAttribute]);
+        }
+    });
+
+    // Ensure array is not empty before calculations
+    if (yearValues.length > 0) {
+        dataStats.min = Math.min(...yearValues);
+        dataStats.max = Math.max(...yearValues);
+        dataStats.mean = yearValues.reduce((a, b) => a + b, 0) / yearValues.length;
+    } else {
+        console.warn("No valid population data found for year:", yearGlobal);
+        dataStats.min = 1; // Prevent divide-by-zero errors
+        dataStats.max = 1;
+        dataStats.mean = 1;
+    }
+
+    console.log(dataStats);
 }
+
 
 
 // Function to create symbols
@@ -130,7 +145,7 @@ function pointToLayer(feature, latlng, attributes){
 //Calculate radius of each proportional symbol
 function calcPropRadius(attValue) {
     //Constant factor adjusts symbol sizes evenly
-    var minRadius = 3;
+    var minRadius = 3
 
     //Flannery Appearance Compensation formula
     var radius = 1.0083 * Math.pow(attValue/dataStats.min,0.3715) * minRadius;
@@ -196,12 +211,24 @@ function createSequenceControls(attributes) {
             //Step 6: increment or decrement depending on button clicked
             if (step.id == 'forward'){
                 index++;
+                yearGlobal++
                 //Step 7: if past the last attribute, wrap around to first attribute
-                index = index > 9 ? 0 : index;
+                if (index > 9) {
+                    index = 0;
+                    yearGlobal = 2010;
+                } else {
+                    index = index;
+                }
             } else if (step.id == 'reverse'){
                 index--;
+                yearGlobal--;
                 //Step 7: if past the first attribute, wrap around to last attribute
-                index = index < 0 ? 9 : index;
+                if (index < 0) {
+                    index = 9;
+                    yearGlobal = 2019;
+                } else {
+                    index = index;
+                }
             };
 
             //Step 8: update slider
@@ -238,7 +265,7 @@ function createLegend(attributes) {
             legendContainer.innerHTML = `<h2 class="temporalLegend"> Population in <span class="year">2010</span></h2>`
 
             //Start attribute legend with SVG string
-            var svg = '<svg id="attribute-legend" width="220px" height-"100px>';
+            var svg = '<svg id="attribute-legend" width="220px" height="100px">';
 
             //Array of cirlce names to base loop on
             var circles = ["max", "mean", "min"];
@@ -249,6 +276,7 @@ function createLegend(attributes) {
                 //Assign r and cy attributes
                 var radius = calcPropRadius(dataStats[circles[i]]);
                 var cy = 75 - radius;
+                console.log(dataStats[circles[i]])
 
                 //Circle string
                 svg += `<circle class="legend-circle" id="' + circles[i] + '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="60" cy="${cy}" r="${radius}"/>`;
@@ -273,19 +301,38 @@ function createLegend(attributes) {
     map.addControl(new LegendControl());
 };
 
-//Updates text and proportional circle sizes in the legend
 function updateLegend(attribute) {
+    var year = attribute.split(" ")[0];
 
-    //Get current year
-    var year = attribute.split(" ")[0]; 
-
-    //Find span class 'year' and update legend text
+    // Update the year in the legend
     var yearSpan = document.querySelector(".legend-control-container .year");
-    if(yearSpan) {
+    if (yearSpan) {
         yearSpan.textContent = year;
     }
 
+    // Ensure geojsonData is available before calculating stats
+    if (geojsonData) {
+        calcStats(geojsonData); // Now using the full dataset
+    } else {
+        console.warn("GeoJSON data is not available.");
+        return;
+    }
 
+    // Update legend circles dynamically
+    ["max", "mean", "min"].forEach(stat => {
+        var circle = document.getElementById(stat);
+        var text = document.getElementById(stat + "-text");
+        console.log(text)
+        console.log(circle)
+
+        if (circle && text) {
+            console.log("hi")
+            var radius = calcPropRadius(dataStats[stat]);
+            circle.setAttribute("r", radius);
+            circle.setAttribute("cy", 75 - radius);
+            text.textContent = Math.round(dataStats[stat] * 100) / 100;
+        }
+    });
 }
 
 
